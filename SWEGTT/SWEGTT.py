@@ -127,16 +127,3 @@ def lambda_handler(event, context):
     response["Resultados"] = {"Valores":json.loads(values)}
     
     return response
-
-if __name__ == "__main__":
-    lambda_handler({
-  "system": "SEN",
-  "market": "MTR",
-  "year_start": "2018",
-  "month_start": "01",
-  "day_start": "07",
-  "year_end": "2018",
-  "month_end": "02",
-  "day_end": "07",
-  "format": "JSON"
-},0)
