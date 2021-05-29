@@ -22,7 +22,7 @@ def check_data(system, market, zonas_carga, year_start, month_start, day_start, 
 
     return all([
         system in ["SIN","BCA","BCS"],
-        market == 'MDA-AUGC',
+        market == 'MTR',
         zonas_carga != "",
         len(year_start) == 4,
         len(month_start) == 2,
