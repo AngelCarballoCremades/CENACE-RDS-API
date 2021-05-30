@@ -106,6 +106,7 @@ def lambda_handler(event, context):
 
     # Prepare zones and dates for query
     zonas_carga = zonas_carga.replace(",","','")
+    zonas_carga = zonas_carga.replace("-"," ")
     date_start = f"{year_start}-{month_start}-{day_start}"
     date_end = f"{year_end}-{month_end}-{day_end}"
     
