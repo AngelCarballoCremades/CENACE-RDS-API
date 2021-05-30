@@ -123,13 +123,14 @@ def lambda_handler(event, context):
         "proceso":market,
         "sistema":system,
         "area":"Open Source Project https://github.com/AngelCarballoCremades/CENACE-RDS-API",
-        "Resultados":{}
+        "Resultados":zonas_carga.split("','")
     }
 
     # Format response json to fit CENACE APIs format
     for i,zona in enumerate(zonas_carga.split("','")):
 
-        values = df.loc[df['zona_de_carga'] == zona][['fecha','hora','energia']].reset_index(drop=True).to_json(orient='index')
-        response["Resultados"][i] = {"zona_carga":zona,"Valores":json.loads(values)}
+        values = json.loads(df.loc[df['zona_de_carga'] == zona][['fecha','hora','energia']].reset_index(drop=True).to_json(orient='index'))
+        values = list(values.values())
+        response["Resultados"][i] = {"zona_carga":zona,"Valores":values}
     
     return response
