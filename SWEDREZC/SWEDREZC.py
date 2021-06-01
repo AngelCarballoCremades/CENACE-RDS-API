@@ -24,7 +24,7 @@ def check_data(system, market, zonas_carga, year_start, month_start, day_start, 
         system in ["SIN","BCA","BCS"],
         market == "MTR",
         zonas_carga != "",
-        zonas_carga.replace("-","").isalpha(),
+        zonas_carga.replace("-","").replace(",","").isalpha(),
         len(year_start) == 4,
         year_start.isnumeric(),
         len(month_start) == 2,
@@ -109,7 +109,7 @@ def lambda_handler(event, context):
     
     # Check of entered variables
     if not check_data(system, market, zonas_carga, year_start, month_start, day_start, year_end, month_end, day_end):
-        return json.dumps("Error: Datos incorrectos.")    
+        return {"Message":"Datos incorrectos"}
 
     # Prepare zones and dates for query
     zonas_carga = zonas_carga.replace(",","','")
