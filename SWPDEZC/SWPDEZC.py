@@ -23,13 +23,19 @@ def check_data(system, market, zonas_carga, year_start, month_start, day_start, 
     return all([
         system in ["SIN","BCA","BCS"],
         market == 'MDA-AUGC',
-        zonas_carga != "",
+        zonas_carga.replace("-","").isalpha(),
         len(year_start) == 4,
+        year_start.isnumeric(),
         len(month_start) == 2,
+        month_start.isnumeric(),
         len(day_start) == 2,
+        day_start.isnumeric(),
         len(year_end) == 4,
+        year_start.isnumeric(),
         len(month_end) == 2,
-        len(day_end) == 2])
+        month_start.isnumeric(),
+        len(day_end) == 2,
+        day_end.isnumeric()])
 
 def postgres_password():
     """Returns required parameters to connect to RDS instance"""
