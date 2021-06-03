@@ -10,11 +10,11 @@ import json
 from datetime import date
 
 
-DB_NAME = os.environ['DB_NAME']
-DB_TABLE = os.environ['DB_TABLE']
-DB_HOST = os.environ['DB_HOST']
-DB_USER = os.environ['DB_USER']
-DB_PASSWORD = os.environ['DB_PASSWORD']
+DB_NAME = os.environ["DB_NAME"]
+DB_TABLE = os.environ["DB_TABLE"]
+DB_HOST = os.environ["DB_HOST"]
+DB_USER = os.environ["DB_USER"]
+DB_PASSWORD = os.environ["DB_PASSWORD"]
 
 
 def check_data(system, market, year_start, month_start, day_start, year_end, month_end, day_end):
@@ -22,23 +22,29 @@ def check_data(system, market, year_start, month_start, day_start, year_end, mon
 
     return all([
         system == "SEN", # Info available is for entire Electrical system (SEN)
-        market == 'MTR',
+        market == "MTR",
         len(year_start) == 4,
+        year_start.isnumeric(),
         len(month_start) == 2,
+        month_start.isnumeric(),
         len(day_start) == 2,
+        day_start.isnumeric(),
         len(year_end) == 4,
+        year_start.isnumeric(),
         len(month_end) == 2,
-        len(day_end) == 2])
+        month_start.isnumeric(),
+        len(day_end) == 2,
+        day_end.isnumeric()])
 
 def postgres_password():
     """Returns required parameters to connect to RDS instance"""
 
     params = {
-    'host':DB_HOST,
-    'user':DB_USER,
-    'password':DB_PASSWORD,
-    'port':5432,
-    'database':DB_NAME
+    "host":DB_HOST,
+    "user":DB_USER,
+    "password":DB_PASSWORD,
+    "port":5432,
+    "database":DB_NAME
     }
 
     return params
@@ -47,9 +53,12 @@ def postgres_password():
 def format_df(df):
     """Formats DataFrame columns to required string format"""
 
-    df.drop(columns=['sistema'], inplace=True)
-    df['fecha'] = df['fecha'].apply(lambda x: date.strftime(x, r"%Y-%m-%d"))
+    df.drop(columns=["sistema"], inplace=True)
+    df["fecha"] = df["fecha"].apply(lambda x: date.strftime(x, r"%Y-%m-%d"))
     df = df.applymap(str)
+    df.set_index(["fecha","hora"], inplace=True)
+    df = df.stack().reset_index()
+    df.columns = ["fecha","hora","tecnologia","energia"]
      
     return df
 
@@ -99,7 +108,7 @@ def lambda_handler(event, context):
     
     # Check of entered variables
     if not check_data(system, market, year_start, month_start, day_start, year_end, month_end, day_end):
-        return json.dumps("Error: Datos incorrectos.")    
+        return {"Message":"Datos incorrectos"}    
 
     # Prepare zones and dates for query
     date_start = f"{year_start}-{month_start}-{day_start}"
@@ -112,18 +121,23 @@ def lambda_handler(event, context):
 
     # Check if DataFrame is empty
     status = check_status(df)    
-         
+    
+    generation_types = df["tecnologia"].unique().tolist()
+    
     response = {
         "status":status,
         "nombre":"Energía Generada por Tipo de Tecnología",
         "proceso":market,
         "sistema":system,
         "area":"Open Source Project https://github.com/AngelCarballoCremades/CENACE-RDS-API",
-        "Resultados":{}
+        "Resultados":generation_types
     }
 
     # Format response json to fit CENACE APIs format
-    values = df.to_json(orient='index')
-    response["Resultados"] = {"Valores":json.loads(values)}
-    
+    for i,gen_type in enumerate(generation_types):
+
+        values = json.loads(df.loc[df['tecnologia'] == gen_type][['fecha','hora','energia']].reset_index(drop=True).to_json(orient='index'))
+        values = list(values.values())
+        response["Resultados"][i] = {"tecnologia":gen_type,"Valores":values}
+
     return response
