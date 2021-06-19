@@ -1,6 +1,0 @@
-__pycache__
-.*
-.vscode
-api-test.py
-*.json
-info.txt
