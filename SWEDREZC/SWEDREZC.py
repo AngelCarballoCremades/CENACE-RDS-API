@@ -62,19 +62,20 @@ def format_df(df):
     return df
 
 
-def request_to_db(cursor, DB_TABLE, zonas_carga, date_start, date_end):
+def request_to_db(cursor, DB_TABLE, system, zonas_carga, date_start, date_end):
     """Makes a query to db with selected options, returns clean DataFrame"""
 
     cursor.execute("""
         SELECT * FROM {}
         WHERE zona_de_carga IN ('{}') AND
+            sistema = '{}' AND
             fecha >= '{}' AND
             fecha <= '{}'
         ORDER BY
             zona_de_carga ASC, 
             fecha ASC,
             hora ASC
-        ;""".format(DB_TABLE,zonas_carga, date_start, date_end))
+        ;""".format(DB_TABLE,zonas_carga, system, date_start, date_end))
 
     colnames = [desc[0] for desc in cursor.description] # Get column names from cursor
     df = pd.DataFrame(data=cursor.fetchall(), columns=colnames)
@@ -120,7 +121,7 @@ def lambda_handler(event, context):
     # Connect to RDS and request information
     with pg2.connect(**postgres_password()) as conn:
         cursor = conn.cursor()
-        df = request_to_db(cursor, DB_TABLE, zonas_carga, date_start, date_end)
+        df = request_to_db(cursor, DB_TABLE, system, zonas_carga, date_start, date_end)
 
     # Check if DataFrame is empty
     status = check_status(df)    
