@@ -7,7 +7,7 @@ import psycopg2 as pg2
 import os
 import pandas as pd
 import json
-from datetime import date
+from datetime import date, datetime
 
 
 DB_NAME = os.environ["DB_NAME"]
@@ -114,6 +114,11 @@ def lambda_handler(event, context):
     # Prepare zones and dates for query
     date_start = f"{year_start}-{month_start}-{day_start}"
     date_end = f"{year_end}-{month_end}-{day_end}"
+    delta = datetime.strptime(date_end, r"%Y-%m-%d") - datetime.strptime(date_start, r"%Y-%m-%d")
+
+    # End date must be greater than start date and difference must be at most 200 days
+    if delta.days > 200 or 0 > delta.days:
+        return {"Message":"Fechas inválidas"}
     
     # Connect to RDS and request information
     with pg2.connect(**postgres_password()) as conn:
@@ -130,7 +135,7 @@ def lambda_handler(event, context):
         "nombre":"Pronóstico de Generación Intermitente",
         "proceso":market,
         "sistema":system,
-        "area":"Open Source Project https://github.com/AngelCarballoCremades/CENACE-RDS-API",
+        "area":"Open Source Project https://github.com/AngelCarballoCremades/energia-mexico-REST-API",
         "Resultados":generation_types
     }
 
