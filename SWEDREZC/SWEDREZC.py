@@ -7,7 +7,7 @@ import psycopg2 as pg2
 import os
 import pandas as pd
 import json
-from datetime import date
+from datetime import date, datetime
 
 
 DB_NAME = os.environ['DB_NAME']
@@ -117,7 +117,16 @@ def lambda_handler(event, context):
     zonas_carga = zonas_carga.replace("-"," ")
     date_start = f"{year_start}-{month_start}-{day_start}"
     date_end = f"{year_end}-{month_end}-{day_end}"
-    
+    delta = datetime.strptime(date_end, r"%Y-%m-%d") - datetime.strptime(date_start, r"%Y-%m-%d")
+
+    # At most 10 zonas de carga can be requested
+    if len(zonas_carga.split(",")) > 10:
+        return {"Message":"No se pueden hacer peticiones para más de 10 Zonas de Carga"}
+
+    # End date must be greater than start date and difference must be at most 200 days
+    if delta.days > 200 or 0 > delta.days:
+        return {"Message":"Fechas inválidas"}
+
     # Connect to RDS and request information
     with pg2.connect(**postgres_password()) as conn:
         cursor = conn.cursor()
@@ -131,7 +140,7 @@ def lambda_handler(event, context):
         "nombre":"Estimación de la Demanda Real de Energía por Zona de Carga",
         "proceso":market,
         "sistema":system,
-        "area":"Open Source Project https://github.com/AngelCarballoCremades/CENACE-RDS-API",
+        "area":"Open Source Project https://github.com/AngelCarballoCremades/energia-mexico-REST-API",
         "Resultados":zonas_carga.split("','")
     }
 
